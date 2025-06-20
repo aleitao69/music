@@ -30,7 +30,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 
-DEBUG = False
+DEBUG = True
 
 
 ALLOWED_HOSTS = ['music-mws5.onrender.com', 'localhost', '127.0.0.1']
