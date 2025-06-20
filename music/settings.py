@@ -24,17 +24,30 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
+
+
+
+
+
+
+DEBUG = False
+
+ALLOWED_HOSTS = ['music.onrender.com']
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-oytmo8$gm)htptpk@6$x%5^za&fx0t#d#0zrwfdn9(4d2c(&w^'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-
-ALLOWED_HOSTS = ['*']
 
 
 # Application definition
