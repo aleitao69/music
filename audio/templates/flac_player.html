@@ -59,7 +59,7 @@
         }
 
         function prevTrack() {
-            index = (index - 1) % playlist.length;
+            index = (index - 1 + playlist.length) % playlist.length;
             loadTrack(index);
             player.play();
         }
