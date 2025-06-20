@@ -15,7 +15,7 @@
             padding: 10px 15px;
         }
         input[type="range"] {
-            width: 600px;
+            width: 700px;
         }
     </style>
 </head>
@@ -30,23 +30,30 @@
     <button onclick="pause()">⏸ Pause</button></br></br></br>
     <button onclick="forward()">⏭ Forward</button>
     
-    <br><br>
+    <br><br></br></br></br>
 
     <!-- Seek Bar -->
     <input type="range" id="progressBar" value="0" min="0" max="100" step="0.1" oninput="seek()" />
     <p id="currentTimeDisplay">00:00 / 00:00</p>
+    </br></br>
+    <button id="shuffle-btn">🔀 Shuffle Off</button>
 
     <!-- Playlist -->
-    <script id="flac-data" type="application/json">
-        ["/media/audio/200moremiles.flac", "/media/audio/hob.mp3"]
+    <script>
+            const playlist = {{ flac_files|safe }};
     </script>
+   
 
     <script>
-        const playlist = JSON.parse(document.getElementById("flac-data").textContent);
+        
+        
         const player = document.getElementById("flacPlayer");
         const progressBar = document.getElementById("progressBar");
         const timeDisplay = document.getElementById("currentTimeDisplay");
         let index = 0;
+        
+        let currentIndex = 0;
+        let isShuffle = false;
 
         function play() {
             if (player.src !== window.location.origin + playlist[index]) {
@@ -70,6 +77,52 @@
             index = (index - 1 + playlist.length) % playlist.length;
             play();
         }
+
+
+
+
+        const audio = new Audio();
+        const shuffleBtn = document.getElementById("shuffle-btn");
+
+        // Toggle shuffle mode
+        shuffleBtn.addEventListener("click", () => {
+            isShuffle = !isShuffle;
+            shuffleBtn.textContent = isShuffle ? "🔀 Shuffle On" : "🔀 Shuffle Off";
+        });
+
+        // Play a track
+        function playTrack(index) {
+            currentIndex = index;
+            audio.src = playlist[currentIndex];
+            audio.play();
+        }
+
+        // Play next track
+        function playNext() {
+            if (isShuffle) {
+                let nextIndex;
+                do {
+                    nextIndex = Math.floor(Math.random() * playlist.length);
+                } while (nextIndex === currentIndex && playlist.length > 1);
+                playTrack(nextIndex);
+            } else {
+                currentIndex = (currentIndex + 1) % playlist.length;
+                playTrack(currentIndex);
+            }
+        }
+
+        // Event: Track ended
+        audio.addEventListener("ended", playNext);
+
+        // Initial load
+        playTrack(currentIndex);
+
+
+
+
+
+
+
 
         player.addEventListener("ended", forward);
 
