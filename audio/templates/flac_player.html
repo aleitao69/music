@@ -1,116 +1,101 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>🎶 FLAC Player</title>
+    <title>FLAC Playlist Player</title>
     <style>
         body {
             font-family: sans-serif;
             text-align: center;
             margin-top: 50px;
         }
-        canvas {
-            margin-top: 20px;
-            border: 1px solid #ccc;
+        button {
+            font-size: 18px;
+            margin: 5px;
+            padding: 10px 15px;
+        }
+        input[type="range"] {
+            width: 300px;
         }
     </style>
 </head>
 <body>
-    <h2>🎧 FLAC & MP3 Web Player</h2>
+    <h1>🎵 FLAC Playlist</h1>
 
-    <!-- Controles -->
-    <button onclick="prevTrack()">⏮️ Anterior</button>
-    <button onclick="startPlayback()">▶️ Tocar</button>
-    <button onclick="nextTrack()">⏭️ Próxima</button>
+    <audio id="flacPlayer" hidden></audio>
+    
+    <!-- Playback Controls -->
+    <button onclick="rewind()">⏮ Rewind</button>
+    <button onclick="play()">▶ Play</button>
+    <button onclick="pause()">⏸ Pause</button>
+    <button onclick="forward()">⏭ Forward</button>
+    
     <br><br>
 
-    <!-- Controle de Volume -->
-    <label for="volumeControl">🔊 Volume:</label>
-    <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="1" onchange="setVolume(this.value)">
+    <!-- Seek Bar -->
+    <input type="range" id="progressBar" value="0" min="0" max="100" step="0.1" oninput="seek()" />
+    <p id="currentTimeDisplay">00:00 / 00:00</p>
 
-    <!-- Player de áudio oculto -->
-    <audio id="flacPlayer" hidden></audio>
-
-    <!-- Canvas para visualização -->
-    <canvas id="visualizer" width="600" height="100"></canvas>
-
-    <!-- Dados da playlist -->
+    <!-- Playlist -->
     <script id="flac-data" type="application/json">
-        {{ flac_urls|safe }}
+        ["/media/audio/200moremiles.flac", "/media/audio/hob.mp3"]
     </script>
 
-    <!-- Script principal -->
     <script>
         const playlist = JSON.parse(document.getElementById("flac-data").textContent);
         const player = document.getElementById("flacPlayer");
+        const progressBar = document.getElementById("progressBar");
+        const timeDisplay = document.getElementById("currentTimeDisplay");
         let index = 0;
 
-        // Inicializa faixa
-        function loadTrack(i) {
-            player.src = playlist[i];
-            player.load();
+        function play() {
+            if (player.src !== window.location.origin + playlist[index]) {
+                // Only change src if it's a new track
+                player.src = playlist[index];
+                player.load();
+            }
+            player.play().catch(err => console.warn("Playback error:", err));
         }
 
-        function playNext() {
+        function pause() {
+            player.pause();
+        }
+
+        function forward() {
             index = (index + 1) % playlist.length;
-            loadTrack(index);
-            player.play();
+            play();
         }
 
-        function prevTrack() {
+        function rewind() {
             index = (index - 1 + playlist.length) % playlist.length;
-            loadTrack(index);
-            player.play();
+            play();
         }
 
-        function startPlayback() {
-            loadTrack(index);
-            player.play();
-        }
+        player.addEventListener("ended", forward);
 
-        function setVolume(value) {
-            player.volume = value;
-        }
+        player.addEventListener("timeupdate", () => {
+            if (player.duration) {
+                const percent = (player.currentTime / player.duration) * 100;
+                progressBar.value = percent;
+                updateTimeDisplay();
+            }
+        });
 
-        // Visualizador
-        const canvas = document.getElementById("visualizer");
-        const ctx = canvas.getContext("2d");
-
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioCtx.createMediaElementSource(player);
-        const analyser = audioCtx.createAnalyser();
-        source.connect(analyser);
-        analyser.connect(audioCtx.destination);
-
-        analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-
-        function draw() {
-            requestAnimationFrame(draw);
-            analyser.getByteFrequencyData(dataArray);
-
-            ctx.fillStyle = "#fff";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const barWidth = canvas.width / bufferLength;
-            for (let i = 0; i < bufferLength; i++) {
-                const barHeight = dataArray[i];
-                ctx.fillStyle = "purple";
-                ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
+        function seek() {
+            if (player.duration) {
+                const newTime = (progressBar.value / 100) * player.duration;
+                player.currentTime = newTime;
             }
         }
 
-        // Inicia visualizador ao tocar
-        player.onplay = () => {
-            audioCtx.resume();  // Reativo em contextos modernos
-            draw();
-        };
-
-        // Reproduz próxima faixa automaticamente
-        player.addEventListener('ended', playNext);
+        function updateTimeDisplay() {
+            const format = sec => {
+                const m = Math.floor(sec / 60);
+                const s = Math.floor(sec % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            };
+            timeDisplay.textContent = `${format(player.currentTime)} / ${format(player.duration || 0)}`;
+        }
     </script>
 </body>
 </html>
-
