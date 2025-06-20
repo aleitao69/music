@@ -21,10 +21,11 @@ from django.conf.urls.static import static
 from audio.views import flac_player_view
 from django.http import HttpResponse
 
-
-
 urlpatterns = [
-    path('', lambda request: HttpResponse("🎵 FLAC player is live!")),
+    path('admin/', admin.site.urls),
+    path('', flac_player_view, name='home'),  # ✅ Render the FLAC player
 ]
 
+# Serve media files (e.g. .flac) in development
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
