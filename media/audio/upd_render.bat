@@ -10,4 +10,3 @@ git commit -m "🎵 Add new songs to playlist"
 echo Pushing to GitHub...
 git push origin main
 
-pause
