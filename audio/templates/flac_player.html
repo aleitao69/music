@@ -38,117 +38,93 @@
     </br></br>
     <button id="shuffle-btn">🔀 Shuffle Off</button>
 
-    <!-- Playlist -->
-    <script>
-            const playlist = {{ flac_files|safe }};
-    </script>
+   
    
 
     <script>
-        
-        
-        const player = document.getElementById("flacPlayer");
-        const progressBar = document.getElementById("progressBar");
-        const timeDisplay = document.getElementById("currentTimeDisplay");
-        let index = 0;
-        
-        let currentIndex = 0;
-        let isShuffle = false;
+    const playlist = {{ flac_files|safe }};
+    const player = document.getElementById("flacPlayer");
+    const progressBar = document.getElementById("progressBar");
+    const timeDisplay = document.getElementById("currentTimeDisplay");
+    const shuffleBtn = document.getElementById("shuffle-btn");
 
-        function play() {
-            if (player.src !== window.location.origin + playlist[index]) {
-                // Only change src if it's a new track
-                player.src = playlist[index];
-                player.load();
-            }
-            player.play().catch(err => console.warn("Playback error:", err));
+    let index = 0;
+    let isShuffle = false;
+
+    // Toggle shuffle mode
+    shuffleBtn.addEventListener("click", () => {
+        isShuffle = !isShuffle;
+        shuffleBtn.textContent = isShuffle ? "🔀 Shuffle On" : "🔀 Shuffle Off";
+    });
+
+    function play() {
+        // Only set src if different
+        if (!player.src.includes(playlist[index])) {
+            player.src = playlist[index];
+            player.load();
         }
+        player.play().catch(err => console.warn("Playback error:", err));
+    }
 
-        function pause() {
-            player.pause();
-        }
+    function pause() {
+        player.pause();
+    }
 
-        function forward() {
+    function forward() {
+        if (isShuffle) {
+            let next;
+            do {
+                next = Math.floor(Math.random() * playlist.length);
+            } while (next === index && playlist.length > 1);
+            index = next;
+        } else {
             index = (index + 1) % playlist.length;
-            play();
         }
+        play();
+    }
 
-        function rewind() {
+    function rewind() {
+        if (isShuffle) {
+            let prev;
+            do {
+                prev = Math.floor(Math.random() * playlist.length);
+            } while (prev === index && playlist.length > 1);
+            index = prev;
+        } else {
             index = (index - 1 + playlist.length) % playlist.length;
-            play();
         }
+        play();
+    }
 
+    player.addEventListener("ended", forward);
 
-
-
-        const audio = new Audio();
-        const shuffleBtn = document.getElementById("shuffle-btn");
-
-        // Toggle shuffle mode
-        shuffleBtn.addEventListener("click", () => {
-            isShuffle = !isShuffle;
-            shuffleBtn.textContent = isShuffle ? "🔀 Shuffle On" : "🔀 Shuffle Off";
-        });
-
-        // Play a track
-        function playTrack(index) {
-            currentIndex = index;
-            audio.src = playlist[currentIndex];
-            audio.play();
+    // Progress bar update
+    player.addEventListener("timeupdate", () => {
+        if (player.duration) {
+            const percent = (player.currentTime / player.duration) * 100;
+            progressBar.value = percent;
+            updateTimeDisplay();
         }
+    });
 
-        // Play next track
-        function playNext() {
-            if (isShuffle) {
-                let nextIndex;
-                do {
-                    nextIndex = Math.floor(Math.random() * playlist.length);
-                } while (nextIndex === currentIndex && playlist.length > 1);
-                playTrack(nextIndex);
-            } else {
-                currentIndex = (currentIndex + 1) % playlist.length;
-                playTrack(currentIndex);
-            }
+    function seek() {
+        if (player.duration) {
+            const newTime = (progressBar.value / 100) * player.duration;
+            player.currentTime = newTime;
         }
+    }
 
-        // Event: Track ended
-        audio.addEventListener("ended", playNext);
+    function updateTimeDisplay() {
+        const format = sec => {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        };
+        timeDisplay.textContent = `${format(player.currentTime)} / ${format(player.duration || 0)}`;
+    }
 
-        // Initial load
-        playTrack(currentIndex);
-
-
-
-
-
-
-
-
-        player.addEventListener("ended", forward);
-
-        player.addEventListener("timeupdate", () => {
-            if (player.duration) {
-                const percent = (player.currentTime / player.duration) * 100;
-                progressBar.value = percent;
-                updateTimeDisplay();
-            }
-        });
-
-        function seek() {
-            if (player.duration) {
-                const newTime = (progressBar.value / 100) * player.duration;
-                player.currentTime = newTime;
-            }
-        }
-
-        function updateTimeDisplay() {
-            const format = sec => {
-                const m = Math.floor(sec / 60);
-                const s = Math.floor(sec % 60).toString().padStart(2, '0');
-                return `${m}:${s}`;
-            };
-            timeDisplay.textContent = `${format(player.currentTime)} / ${format(player.duration || 0)}`;
-        }
-    </script>
+    // Start with first track
+    play();
+</script>
 </body>
 </html>
