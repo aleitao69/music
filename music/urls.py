@@ -19,13 +19,12 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from audio.views import flac_player_view
+from django.http import HttpResponse
+
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', flac_player_view, name='home'),  # ✅ Root route plays music
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
+    path('', lambda request: HttpResponse("🎵 FLAC player is live!")),
+]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
