@@ -9,9 +9,9 @@
     <button onclick="startPlayback()">🎵 Start Music</button>
 
 <audio id="flacPlayer" hidden></audio>
+
 <audio controls>
-  <source src="/media/200moremiles.flac" type="audio/flac">
-  Your browser does not support the audio element.
+  <source src="/media/hob.mp3" type="audio/mpeg">
 </audio>
 
 {{ flac_files|json_script:"flac-data" }}
