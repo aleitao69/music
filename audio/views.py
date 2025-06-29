@@ -9,7 +9,7 @@ def flac_player_view(request):
     audio_files = []
 
     for file in os.listdir(audio_folder):
-        if file.endswith(('.flac', '.mp3')):
+        if file.endswith(('.flac', '.mp3', '.mp4')):
             audio_files.append(f"/media/audio/{file}")
 
     context = {
