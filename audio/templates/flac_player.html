@@ -30,6 +30,8 @@
     <h1>🎵 FLAC Playlist</h1>
 
     <audio id="flacPlayer"></audio>
+    <video id="mediaPlayer" width="720" controls hidden></video>
+
     
     <!-- Playback Controls -->
     <button onclick="rewind()">⏮ Rewind</button></br></br></br>
@@ -53,6 +55,7 @@
     <script>
     const playlist = {{ flac_files|safe }};
     const player = document.getElementById("flacPlayer");
+    const video = document.getElementById("mediaPlayer");
     const progressBar = document.getElementById("progressBar");
     const timeDisplay = document.getElementById("currentTimeDisplay");
     const shuffleBtn = document.getElementById("shuffle-btn");
@@ -66,14 +69,27 @@
         shuffleBtn.textContent = isShuffle ? "🔀 Shuffle On" : "🔀 Shuffle Off";
     });
 
-    function play() {
-        // Only set src if different
-        if (!player.src.includes(playlist[index])) {
-            player.src = playlist[index];
-            player.load();
+
+ 
+    function play(index) {
+        const file = playlist[index];
+        const isVideo = file.endsWith(".mp4");
+
+        if (isVideo) {
+            player.pause();
+            player.hidden = true;
+            video.src = file;
+            video.hidden = false;
+            video.play();
+        } else {
+            video.pause();
+            video.hidden = true;
+            audio.src = file;
+            audio.hidden = false;
+            audio.play();
         }
-        player.play().catch(err => console.warn("Playback error:", err));
     }
+
 
     function pause() {
         player.pause();
