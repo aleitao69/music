@@ -1,33 +1,41 @@
+
+
+
+
 {% load static %}
 <!DOCTYPE html>
 <html>
 <head>
-  <title>🎵 Media Playlist Player</title>
+  <title>FLAC Playlist</title>
   <style>
     body { font-family: sans-serif; text-align: center; margin-top: 50px; }
     button { font-size: 130px; margin: 5px; padding: 10px 15px; }
     input[type="range"] { width: 700px; }
-    video, audio { margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h1>🎶 Media Playlist Player</h1>
 
-  <!-- Players -->
-  <audio id="audioPlayer" controls hidden></audio>
-  <video id="videoPlayer" width="720" controls hidden></video>
+<h1>🎵 FLAC Playlist</h1>
 
-  <!-- Controls -->
-  <div>
-    <button onclick="rewind()">⏮</button>
-    <button onclick="play()">▶</button>
-    <button onclick="pause()">⏸</button>
-    <button onclick="forward()">⏭</button>
-  </div>
+<video id="flacPlayer" width="640" height="360" controls></video>
+</br>
+</br>
+</br>
 
-  <!-- Playlist Script -->
-  <script>
-    // ✅ Your playlist — update as needed
+<!-- Controls -->
+<button onclick="play()">▶ Play</button>
+<button onclick="pause()">⏸ Pause</button>
+<button onclick="rewind()">⏮ Rewind</button>
+<button onclick="forward()">⏭ Forward</button>
+
+<br><br>
+<input type="range" id="progressBar" value="0" min="0" max="100" step="0.1" oninput="seek()" />
+<p id="currentTimeDisplay">00:00 / 00:00</p>
+<!--button id="shuffle-btn">🔀 Shuffle Off</button!-->
+<p id="nowPlaying">🎶 Now Playing: </p>
+
+<script>
+window.onload = function () {
     const playlist = [
       "/media/audio/200_more_miles.mp4",
       "/media/audio/From_Heart_Down_karaoke.mp4",
@@ -35,52 +43,85 @@
       "/media/audio/where_are_you_tonight_karaoke.mp4",
     ];
 
-    const audio = document.getElementById("audioPlayer");
-    const video = document.getElementById("videoPlayer");
+    const player = document.getElementById("flacPlayer");
+    const progressBar = document.getElementById("progressBar");
+    const timeDisplay = document.getElementById("currentTimeDisplay");
+    const nowPlaying = document.getElementById("nowPlaying");
+    //const shuffleBtn = document.getElementById("shuffle-btn");
+
     let index = 0;
+    //let isShuffle = false;
 
-    function getCurrentFile() {
-      return playlist[index] || "";
-    }
-
-    function isVideoFile(file) {
-      return file.toLowerCase().endsWith(".mp4");
+    function updateNowPlaying() {
+        const filename = playlist[index].split("/").pop();
+        nowPlaying.textContent = "🎶 Now Playing: " + decodeURIComponent(filename);
     }
 
     function play() {
-      const file = getCurrentFile();
-
-      if (!file) return;
-
-      if (isVideoFile(file)) {
-        audio.pause();
-        audio.hidden = true;
-        video.src = file;
-        video.hidden = false;
-        video.play();
-      } else {
-        video.pause();
-        video.hidden = true;
-        audio.src = file;
-        audio.hidden = false;
-        audio.play();
-      }
+        player.src = playlist[index];
+        player.load();
+        player.play().catch(err => console.warn("Playback error:", err));
+        updateNowPlaying();
     }
 
     function pause() {
-      if (!audio.hidden) audio.pause();
-      if (!video.hidden) video.pause();
+        player.pause();
     }
 
     function forward() {
-      index = (index + 1) % playlist.length;
-      play();
+        //index = isShuffle
+           // ? Math.floor(Math.random() * playlist.length)
+        index = (index + 1) % playlist.length;
+        play();
     }
 
     function rewind() {
-      index = (index - 1 + playlist.length) % playlist.length;
-      play();
+        index = (index - 1 + playlist.length) % playlist.length;
+        play();
     }
-  </script>
+
+    function seek() {
+        if (player.duration) {
+            const newTime = (progressBar.value / 100) * player.duration;
+            player.currentTime = newTime;
+        }
+    }
+
+    function updateTimeDisplay() {
+        const format = sec => {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        };
+        timeDisplay.textContent = `${format(player.currentTime)} / ${format(player.duration || 0)}`;
+    }
+
+    //shuffleBtn.addEventListener("click", () => {
+       // isShuffle = !isShuffle;
+       // shuffleBtn.textContent = isShuffle ? "🔀 Shuffle On" : "🔀 Shuffle Off";
+   // });
+
+    player.addEventListener("timeupdate", () => {
+        if (player.duration) {
+            const percent = (player.currentTime / player.duration) * 100;
+            progressBar.value = percent;
+            updateTimeDisplay();
+        }
+    });
+
+    player.addEventListener("ended", forward);
+
+    // Expose functions to HTML buttons
+    window.play = play;
+    window.pause = pause;
+    window.forward = forward;
+    window.rewind = rewind;
+    window.seek = seek;
+
+    // Optional: autoplay first track
+    play();
+};
+</script>
+
 </body>
 </html>
