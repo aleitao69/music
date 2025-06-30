@@ -1,0 +1,139 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FLAC Playlist Player</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        button {
+            font-size: 130px;
+            margin: 5px;
+            padding: 10px 15px;
+        }
+        .shuffle_button button
+        {
+            font-size: 90px;
+            margin: 5px;
+            padding: 10px 15px;  
+        }
+
+        input[type="range"] {
+            width: 700px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 FLAC Playlist</h1>
+
+    <audio id="flacPlayer"></audio>
+    
+    <!-- Playback Controls -->
+    <button onclick="rewind()">⏮ Rewind</button></br></br></br>
+    <button onclick="play()">▶ Play</button></br></br></br>
+    <button onclick="pause()">⏸ Pause</button></br></br></br>
+    <button onclick="forward()">⏭ Forward</button>
+    
+    <br><br></br></br></br>
+
+    <!-- Seek Bar -->
+    <input type="range" id="progressBar" value="0" min="0" max="100" step="0.1" oninput="seek()" />
+    <p id="currentTimeDisplay">00:00 / 00:00</p>
+    </br></br>
+    <div class="shuffle_button">
+        <button id="shuffle-btn">🔀 Shuffle Off</button>
+    </div>
+
+   
+   
+
+    <script>
+    const playlist = {{ flac_files|safe }};
+    const player = document.getElementById("flacPlayer");
+    const progressBar = document.getElementById("progressBar");
+    const timeDisplay = document.getElementById("currentTimeDisplay");
+    const shuffleBtn = document.getElementById("shuffle-btn");
+
+    let index = 0;
+    let isShuffle = false;
+
+    // Toggle shuffle mode
+    shuffleBtn.addEventListener("click", () => {
+        isShuffle = !isShuffle;
+        shuffleBtn.textContent = isShuffle ? "🔀 Shuffle On" : "🔀 Shuffle Off";
+    });
+
+    function play() {
+        // Only set src if different
+        if (!player.src.includes(playlist[index])) {
+            player.src = playlist[index];
+            player.load();
+        }
+        player.play().catch(err => console.warn("Playback error:", err));
+    }
+
+    function pause() {
+        player.pause();
+    }
+
+    function forward() {
+        if (isShuffle) {
+            let next;
+            do {
+                next = Math.floor(Math.random() * playlist.length);
+            } while (next === index && playlist.length > 1);
+            index = next;
+        } else {
+            index = (index + 1) % playlist.length;
+        }
+        play();
+    }
+
+    function rewind() {
+        if (isShuffle) {
+            let prev;
+            do {
+                prev = Math.floor(Math.random() * playlist.length);
+            } while (prev === index && playlist.length > 1);
+            index = prev;
+        } else {
+            index = (index - 1 + playlist.length) % playlist.length;
+        }
+        play();
+    }
+
+    player.addEventListener("ended", forward);
+
+    // Progress bar update
+    player.addEventListener("timeupdate", () => {
+        if (player.duration) {
+            const percent = (player.currentTime / player.duration) * 100;
+            progressBar.value = percent;
+            updateTimeDisplay();
+        }
+    });
+
+    function seek() {
+        if (player.duration) {
+            const newTime = (progressBar.value / 100) * player.duration;
+            player.currentTime = newTime;
+        }
+    }
+
+    function updateTimeDisplay() {
+        const format = sec => {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        };
+        timeDisplay.textContent = `${format(player.currentTime)} / ${format(player.duration || 0)}`;
+    }
+
+    // Start with first track
+    play();
+</script>
+</body>
+</html>

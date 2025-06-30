@@ -18,12 +18,13 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from audio.views import flac_player_view
+from audio.views import flac_player_view, flac_player_view_audio
 from django.http import HttpResponse
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', flac_player_view, name='home'),  # ✅ Render the FLAC player
+    path('audio/', flac_player_view_audio, name='audio'),
 ]
 
 # Serve media files (e.g. .flac) in development
